@@ -40,9 +40,15 @@
 
         const rect = canvas.getBoundingClientRect();
 
+        let mouse = { x: 300, y: 200 };
 
+        // Mise à jour de la position de la souris à chaque mouvement
+        canvas.addEventListener('mousemove', e => {
+            mouse.x = e.clientX - rect.left;
+            mouse.y = e.clientY - rect.top;
+        });
 
-        
+        const player = { x: 300, y: 200, rayon: 20, couleur: '#3498db' };
 
 
         // Tableau pour stocker tous les cercles
@@ -70,7 +76,22 @@
 
             });
 
+            const dx = mouse.x - player.x;
+            const dy = mouse.y - player.y;
+            const distance = Math.hypot(dx, dy);
 
+            if (distance > 1) {
+                const vitesse = 3;
+                player.x += (dx / distance) * vitesse;
+                player.y += (dy / distance) * vitesse;
+            }
+
+            // Dessin
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.rayon, 0, Math.PI * 2);
+            ctx.fillStyle = player.couleur;
+            ctx.fill();
+            
             // - Mettre à jour sa position (x += dx, y += dy)
             // - Gérer les rebonds : si le cercle touche un bord (x - rayon < 0 ou x + rayon > canvas.width), inverser dx (dx = -dx).
             // - Faire de même pour le rebond vertical (y, dy, canvas.height)

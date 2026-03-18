@@ -11,6 +11,8 @@ const io = new Server(server);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 console.log(__dirname);
+const players = {};
+
 
 app.get('/', (req, res) => {
   res.sendFile(join(__dirname, 'public/index.html'));
@@ -43,10 +45,13 @@ function random_hex_color() {
 
 io.on('connection', (socket) => {
 
+  players[socket.id] = { x: 300, y: 200, rayon: 20 };
+
   let id = randomUUID();
   console.log('a user connected');
 
   socket.on('disconnect', () => {
+    delete players[socket.id];
     console.log('user disconnected');
   });
 
@@ -56,6 +61,11 @@ io.on('connection', (socket) => {
     cercles.push(cercle);
     cercles.sort((a,b) => a.rayon - b.rayon);
   });
+  
+  socket.on('player:move', (data) => {  
+        players[socket.id] = { x: data.x, y: data.y, rayon: data.rayon };
+        socket.broadcast.emit('players:update', players);
+    });
 
   socket.on('move left', (id) => {
 
