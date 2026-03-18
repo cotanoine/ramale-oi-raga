@@ -21,8 +21,8 @@ app.get('/', (req, res) => {
 var cercles = []
 
 // Currently hardcoded in index.html...
-const map_width = 600;
-const map_height = 400;
+const map_width = 1000;
+const map_height = 700;
 
 
 function gaussianRandom(mean=0, stdev=1) {
@@ -82,18 +82,24 @@ setInterval(() => {
     cercles.forEach(cercle => {
     cercle.x += cercle.dx;
     cercle.y += cercle.dy;
-    if(cercle.x - cercle.rayon < 0 || cercle.x+cercle.rayon > map_width){
-        cercle.dx = - cercle.dx;
+    if(cercle.x - cercle.rayon < 0){
+        cercle.dx = Math.abs(cercle.dx)
+    } 
+    if( cercle.x+cercle.rayon > map_width){
+        cercle.dx = - Math.abs(cercle.dx)
     }
-    if(cercle.y - cercle.rayon < 0 || cercle.y+cercle.rayon > map_height){
-        cercle.dy = - cercle.dy;
+    if(cercle.y - cercle.rayon < 0){
+        cercle.dy = Math.abs(cercle.dy)
+    } 
+    if( cercle.y+cercle.rayon > map_height){
+        cercle.dy = - Math.abs(cercle.dy)
     }
 
     for(let i = num_cercle;i<number_of_circles;i++){
       let autre_cercle = cercles[i];
       if(distance(cercle, autre_cercle) + cercle.rayon < autre_cercle.rayon + 0.5*cercle.rayon){
         cercles.splice(num_cercle-1,1);
-        autre_cercle.rayon += cercle.rayon/20;
+        autre_cercle.rayon += cercle.rayon/3;
         number_of_circles -= 1
         break
       }
