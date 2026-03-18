@@ -72,9 +72,13 @@ io.on('connection', (socket) => {
   })
 });
 
-
+function distance (a,b){
+  return Math.sqrt((a.y - b.y)**2 + (a.x - b.x)**2)
+}
 
 setInterval(() => {
+  let num_cercle = 1;
+  let number_of_circles = cercles.length;
     cercles.forEach(cercle => {
     cercle.x += cercle.dx;
     cercle.y += cercle.dy;
@@ -83,8 +87,22 @@ setInterval(() => {
     }
     if(cercle.y - cercle.rayon < 0 || cercle.y+cercle.rayon > map_height){
         cercle.dy = - cercle.dy;
-    }     
+    }
+
+    for(let i = num_cercle;i<number_of_circles;i++){
+      let autre_cercle = cercles[i];
+      if(distance(cercle, autre_cercle) + cercle.rayon < autre_cercle.rayon + 0.5*cercle.rayon){
+        cercles.splice(num_cercle-1,1);
+        autre_cercle.rayon += cercle.rayon/20;
+        number_of_circles -= 1
+        break
+      }
+    }
+    num_cercle += 1;
   });
+
+
+
     io.emit('positions', cercles);
 }, 25);
 
