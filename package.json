@@ -1,5 +1,10 @@
 {
-    "scripts": {
-        "dev": "node src/server.js"
+    "name": "raga-io",
+    "version": "0.0.1",
+    "description": "my first socket.io app",
+    "type": "module",
+    "dependencies": {
+        "express": "^4.22.1",
+        "socket.io": "^4.8.3"
     }
 }
