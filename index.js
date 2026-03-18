@@ -61,11 +61,11 @@ io.on('connection', (socket) => {
     cercles.push(cercle);
     cercles.sort((a,b) => a.rayon - b.rayon);
   });
-  
+
   socket.on('player:move', (data) => {  
         players[socket.id] = { x: data.x, y: data.y, rayon: data.rayon };
         socket.broadcast.emit('players:update', players);
-    });
+  });
 
   socket.on('move left', (id) => {
 
