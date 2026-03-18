@@ -27,6 +27,12 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
 
+
+        // Replace with your own id
+        const id = 'Hop';
+
+
+
         const socket = io();
 
         var canvas = document.getElementById('myCanvas');
@@ -35,26 +41,8 @@
         const rect = canvas.getBoundingClientRect();
 
 
-        let letters = "0123456789ABCDEF";
-        function random_hex_color() {
 
-        let color = '#';
-
-        // Generating 6 times as HTML color code 
-        // consist of 6 letter or digits
-        for (let i = 0; i < 6; i++)
-            color += letters[(Math.floor(Math.random() * 16))];
-
-        return color;
-                    
-        }
-        function gaussianRandom(mean=0, stdev=1) {
-            const u = 1 - Math.random(); // Converting [0,1) to (0,1]
-            const v = Math.random();
-            const z = Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
-            // Transform to the desired mean and standard deviation:
-            return z * stdev + mean;
-        }
+        
 
 
         // Tableau pour stocker tous les cercles
@@ -62,25 +50,23 @@
 
         // Fonction d'animation principale
         function animate() {    
+
+
+
+
             // Effacer complètement le canvas à chaque frame
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+
 
             // TODO 1: Parcourir le tableau `cercles`.
             // Pour chaque cercle :
             cercles.forEach(cercle => {
-                cercle.x += cercle.dx;
-                cercle.y += cercle.dy;
-                if(cercle.x - cercle.rayon < 0 || cercle.x+cercle.rayon > canvas.width){
-                    cercle.dx = - cercle.dx;
-                }
-                if(cercle.y - cercle.rayon < 0 || cercle.y+cercle.rayon > canvas.height){
-                    cercle.dy = - cercle.dy;
-                }
 
                 ctx.beginPath();
                 ctx.arc(cercle.x, cercle.y, cercle.rayon, 0, Math.PI * 2);
                 ctx.fillStyle = cercle.couleur;
                 ctx.fill();
+                ctx.fillText(cercle.owner, cercle.x - 2*cercle.rayon,cercle.y - cercle.rayon);
 
             });
 
@@ -99,13 +85,13 @@
 
 
         canvas.addEventListener('click', function (e) {
-            cercle = {x:e.x-rect.left, y:e.y-rect.top, dx:gaussianRandom(0,5), dy:gaussianRandom(0,5),rayon:gaussianRandom(40,5), couleur:random_hex_color()};
-            socket.emit('nouveau cercle ', cercle);
+            //cercle = {x:e.x-rect.left, y:e.y-rect.top, dx:gaussianRandom(0,5), dy:gaussianRandom(0,5),rayon:gaussianRandom(40,5), couleur:random_hex_color()};
+            socket.emit('nouveau cercle', e.x-rect.left, e.y - rect.top);
         });
 
-        socket.on('ajoute cercles', (new_circles) => {
-            new_circles.forEach((cercle)=>{cercles.push(cercle)})
-        });
+        socket.on('positions',(circles) => {
+            cercles = circles;
+        })
 
         // TODO 2: Ajouter un écouteur 'click' sur le canvas.
         // A chaque clic :
