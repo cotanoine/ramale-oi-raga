@@ -52,7 +52,7 @@ io.on('connection', (socket) => {
     couleur: random_hex_color(),
     mouse:   { x: 300, y: 200 },
     cellules: [
-        { x: 300, y: 200, rayon: 20, splitTime: null }
+        { x: 300, y: 200, rayon: 100, splitTime: null }
     ]
   };
   socket.emit('your:id', socket.id);
@@ -133,6 +133,7 @@ var orbes = Array.from({ length: NB_ORBES }, creerOrbe);
 function distance (a,b){
   return Math.sqrt((a.y - b.y)**2 + (a.x - b.x)**2)
 }
+
 setInterval(() => {
   let num_cercle = 1;
   let number_of_circles = cercles.length;
@@ -184,6 +185,36 @@ setInterval(() => {
             cellule.y += (dy / dist) * vitesse;
         }
       });
+    });
+
+    // Collision entre cellules du même joueur (répulsion)
+    Object.values(players).forEach(player => {
+      if (player.cellules.length <= 1) return;
+
+      for (let i = 0; i < player.cellules.length; i++) {
+          for (let j = i + 1; j < player.cellules.length; j++) {
+              const c1 = player.cellules[i];
+              const c2 = player.cellules[j];
+
+              // Ignorer si le split est trop récent 
+              const now = Date.now();
+              if (now - c1.splitTime < 10 || now - c2.splitTime < 10) continue;
+
+              const dist = distance(c1, c2);
+              const minDist = c1.rayon + c2.rayon;
+
+              if (dist < minDist && dist > 0) {
+                  const dx = c2.x - c1.x;
+                  const dy = c2.y - c1.y;
+                  const overlap = (minDist - dist) / 2;
+
+                  c1.x -= (dx / dist) * overlap;
+                  c1.y -= (dy / dist) * overlap;
+                  c2.x += (dx / dist) * overlap;
+                  c2.y += (dy / dist) * overlap;
+                }
+          }
+        }
     });
 
     // Fusion automatique des cellules après 10 secondes
