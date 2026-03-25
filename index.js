@@ -48,7 +48,13 @@ function random_hex_color() {
 
 io.on('connection', (socket) => {
 
-  players[socket.id] = { x: 300, y: 200, rayon: 20, couleur: random_hex_color() };
+ players[socket.id] = {
+    couleur: random_hex_color(),
+    mouse:   { x: 300, y: 200 },
+    cellules: [
+        { x: 300, y: 200, rayon: 20, splitTime: null }
+    ]
+  };
   socket.emit('your:id', socket.id);
 
   let id = randomUUID();
@@ -70,6 +76,42 @@ io.on('connection', (socket) => {
     players[socket.id].mouse = { x: data.x, y: data.y };
 });
 
+  socket.on('split', () => {
+    const player = players[socket.id];
+
+    // On crée une nouvelle cellule pour chaque cellule assez grande
+    const nouvellesCellules = [];
+    player.cellules.forEach(cellule => {
+
+        // Rayon minimum pour splitter (pour l'instant 20)
+        if (cellule.rayon < 20) return;
+
+        // Conserver l'aire : si on divise en 2, chaque cellule a la moitié de l'aire
+        const nouveauRayon = cellule.rayon / Math.sqrt(2);
+
+        // Direction vers la souris
+        const dx   = player.mouse.x - cellule.x;
+        const dy   = player.mouse.y - cellule.y;
+        const dist = distance(player.mouse, cellule);
+
+        const eject = 50; // distance d'éjection (pareil à voir)
+        const nx = dist > 0 ? cellule.x + (dx / dist) * eject : cellule.x + eject;
+        const ny = dist > 0 ? cellule.y + (dy / dist) * eject : cellule.y;
+
+        cellule.rayon = nouveauRayon;
+        cellule.splitTime = Date.now();
+
+        nouvellesCellules.push({
+            x:         nx,
+            y:         ny,
+            rayon:     nouveauRayon,
+            splitTime: Date.now()
+        });
+    });
+
+    // Ajouter les nouvelles cellules au joueur
+    player.cellules.push(...nouvellesCellules);
+});
   socket.on('move left', (id) => {
 
   })
@@ -131,29 +173,58 @@ setInterval(() => {
 
     // Mise à jour de la position de chaque joueur vers sa souris
     Object.values(players).forEach(player => {
-        if (!player.mouse) return;
+    player.cellules.forEach(cellule => {
+        const dx   = player.mouse.x - cellule.x;
+        const dy   = player.mouse.y - cellule.y;
+        const dist = distance(player.mouse, cellule);
 
-        const dx = player.mouse.x - player.x;
-        const dy = player.mouse.y - player.y;
-        const distance = Math.hypot(dx, dy);
-
-        if (distance > 1) {
+        if (dist > 1) {
             const vitesse = 3;
-            player.x += (dx / distance) * vitesse;
-            player.y += (dy / distance) * vitesse;
+            cellule.x += (dx / dist) * vitesse;
+            cellule.y += (dy / dist) * vitesse;
         }
+      });
+    });
+
+    // Fusion automatique des cellules après 10 secondes
+    Object.values(players).forEach(player => {
+      if (player.cellules.length <= 1) return; // rien à fusionner
+
+      const now = Date.now();
+      const aFusionner = player.cellules.filter(c => 
+          c.splitTime !== null && now - c.splitTime > 10000
+      );
+
+      if (aFusionner.length < 2) return;
+
+    
+      const aireTotale = aFusionner.reduce((sum, c) => sum + c.rayon ** 2, 0);
+      const nouveauRayon = Math.sqrt(aireTotale);
+
+      const plusGrande = aFusionner.reduce((max, c) => c.rayon > max.rayon ? c : max);
+
+      player.cellules = player.cellules.filter(c => !aFusionner.includes(c));
+      player.cellules.push({
+          x:         plusGrande.x,
+          y:         plusGrande.y,
+          rayon:     nouveauRayon,
+          splitTime: null
+        });
     });
 
     // Envoi des positions à tous les clients
     io.emit('positions', cercles);
     io.emit('orbes', orbes);
     const sortedPlayers = Object.entries(players)
-                                .sort(([, a], [, b]) => a.rayon - b.rayon)
-                                .reduce((obj, [id, player]) => {
-                                  obj[id] = player;
-                              return obj;
-    }, {});
-
+                                .sort(([, a], [, b]) => {
+        const maxA = Math.max(...a.cellules.map(c => c.rayon));
+        const maxB = Math.max(...b.cellules.map(c => c.rayon));
+        return maxA - maxB;
+      })
+        .reduce((obj, [id, player]) => {
+          obj[id] = player;
+          return obj;
+        }, {});
     io.emit('players:update', sortedPlayers);
 
     }, 25);

@@ -51,6 +51,12 @@
             mouse.y = e.clientY - rect.top;
         });
 
+        document.addEventListener('keydown', e => {
+            if (e.code === 'Space') {
+            socket.emit('split');
+            }
+        });
+
         const player = { x: 300, y: 200, rayon: 20, couleur: '#3498db' };
         let otherPlayers = {};
         let myId = null;
@@ -97,10 +103,12 @@
             socket.emit('player:move', { x: mouse.x, y: mouse.y });
 
             Object.entries(otherPlayers).forEach(([id, other]) => {
-                ctx.beginPath();
-                ctx.arc(other.x, other.y, other.rayon, 0, Math.PI * 2);
-                ctx.fillStyle = other.couleur;
-                ctx.fill();
+                other.cellules.forEach(cellule => {
+                    ctx.beginPath();
+                    ctx.arc(cellule.x, cellule.y, cellule.rayon, 0, Math.PI * 2);
+                    ctx.fillStyle = other.couleur;
+                    ctx.fill();
+                });
             });
 
             // - Mettre à jour sa position (x += dx, y += dy)
