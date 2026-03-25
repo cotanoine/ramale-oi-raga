@@ -75,24 +75,39 @@
 
         // Fonction d'animation principale
         function animate() {    
-
-
-            // Effacer complètement le canvas à chaque frame
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+            // Récupérer les cellules du joueur local
+            const moi = otherPlayers[myId];
 
-            // TODO 1: Parcourir le tableau `cercles`.
-            // Pour chaque cercle :
+            // Calculer le centre de masse et le zoom
+            let cx   = canvas.width / 2;
+            let cy   = canvas.height / 2;
+            let zoom = 1;
+
+            if (moi) {
+                cx = moi.cellules.reduce((sum, c) => sum + c.x, 0) / moi.cellules.length;
+                cy = moi.cellules.reduce((sum, c) => sum + c.y, 0) / moi.cellules.length;
+                const rayonMax = Math.max(...moi.cellules.map(c => c.rayon));
+                zoom = Math.min(1, 80 / rayonMax);
+            }
+
+            // Appliquer la transformation caméra
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.scale(zoom, zoom);
+            ctx.translate(-cx, -cy);
+
+            // Dessin des cercles rebondissants
             cercles.forEach(cercle => {
-
                 ctx.beginPath();
                 ctx.arc(cercle.x, cercle.y, cercle.rayon, 0, Math.PI * 2);
                 ctx.fillStyle = cercle.couleur;
                 ctx.fill();
-                ctx.fillText(cercle.owner, cercle.x - 2*cercle.rayon,cercle.y - cercle.rayon);
-
+                ctx.fillText(cercle.owner, cercle.x - 2*cercle.rayon, cercle.y - cercle.rayon);
             });
 
+            // Dessin des orbes
             orbes.forEach(orbe => {
                 ctx.beginPath();
                 ctx.arc(orbe.x, orbe.y, orbe.rayon, 0, Math.PI * 2);
@@ -100,21 +115,23 @@
                 ctx.fill();
             });
 
-            socket.emit('player:move', { x: mouse.x, y: mouse.y });
-
+            // Dessin des joueurs
             Object.entries(otherPlayers).forEach(([id, other]) => {
                 other.cellules.forEach(cellule => {
-                    ctx.beginPath();
+                        ctx.beginPath();
                     ctx.arc(cellule.x, cellule.y, cellule.rayon, 0, Math.PI * 2);
                     ctx.fillStyle = other.couleur;
                     ctx.fill();
                 });
             });
 
-            // - Mettre à jour sa position (x += dx, y += dy)
-            // - Gérer les rebonds : si le cercle touche un bord (x - rayon < 0 ou x + rayon > canvas.width), inverser dx (dx = -dx).
-            // - Faire de même pour le rebond vertical (y, dy, canvas.height)
-            // - Dessiner le cercle (ctx.beginPath(), ctx.arc(), ctx.fillStyle, ctx.fill())
+            ctx.restore();
+
+            // Envoi de la position de la souris au serveur (on convertit d'abord la position de la souris)
+            const mondeX = (mouse.x - canvas.width  / 2) / zoom + cx;
+            const mondeY = (mouse.y - canvas.height / 2) / zoom + cy;
+
+            socket.emit('player:move', { x: mondeX, y: mondeY });
 
             // Boucle d'animation
             requestAnimationFrame(animate);

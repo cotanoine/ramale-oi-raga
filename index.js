@@ -52,7 +52,7 @@ io.on('connection', (socket) => {
     couleur: random_hex_color(),
     mouse:   { x: 300, y: 200 },
     cellules: [
-        { x: 300, y: 200, rayon: 100, splitTime: null }
+        { x: 300, y: 200, rayon: 20, splitTime: null }
     ]
   };
   socket.emit('your:id', socket.id);
