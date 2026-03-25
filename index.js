@@ -188,6 +188,18 @@ setInterval(() => {
       });
     });
 
+    // Collision entre les joueurs et les orbes
+    Object.values(players).forEach(player => {
+      player.cellules.forEach(cellule => {
+          orbes.forEach(orbe => {
+              if (distance(orbe, cellule) + orbe.rayon < cellule.rayon + 0.5 * orbe.rayon) {
+                  orbes.splice(orbes.indexOf(orbe), 1);
+                  cellule.rayon += orbe.rayon / 5;
+                  orbes.push(creerOrbe());
+              }
+            });
+      });
+    });
     // Collision entre cellules du même joueur (répulsion)
     Object.values(players).forEach(player => {
       if (player.cellules.length <= 1) return;
