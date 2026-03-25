@@ -20,8 +20,7 @@
 </head>
 
 <body>
-
-    <canvas id="myCanvas" width="1000" height="700"></canvas>
+    <canvas id="myCanvas" width="1000" height="1000"></canvas>
     <script src="/socket.io/socket.io.js"></script>
     <script>
 
@@ -53,10 +52,20 @@
         });
 
         const player = { x: 300, y: 200, rayon: 20, couleur: '#3498db' };
+        let otherPlayers = {};
+        let myId = null;
 
+        socket.on('your:id', (id) => {
+            myId = id;
+        });
+
+        let orbes = [];
+        socket.on('orbes', (data) => {
+            orbes = data;
+        });
 
         // Tableau pour stocker tous les cercles
-        var cercles = [];
+        var cercles = [{x:50, y:50, dx:1, dy:2, rayon:10, couleur:random_hex_color()}];
 
         // Fonction d'animation principale
         function animate() {    
@@ -78,22 +87,22 @@
 
             });
 
-            const dx = mouse.x - player.x;
-            const dy = mouse.y - player.y;
-            const distance = Math.hypot(dx, dy);
+            orbes.forEach(orbe => {
+                ctx.beginPath();
+                ctx.arc(orbe.x, orbe.y, orbe.rayon, 0, Math.PI * 2);
+                ctx.fillStyle = orbe.couleur;
+                ctx.fill();
+            });
 
-            if (distance > 1) {
-                const vitesse = 3;
-                player.x += (dx / distance) * vitesse;
-                player.y += (dy / distance) * vitesse;
-            }
+            socket.emit('player:move', { x: mouse.x, y: mouse.y });
 
-            // Dessin
-            ctx.beginPath();
-            ctx.arc(player.x, player.y, player.rayon, 0, Math.PI * 2);
-            ctx.fillStyle = player.couleur;
-            ctx.fill();
-            
+            Object.entries(otherPlayers).forEach(([id, other]) => {
+                ctx.beginPath();
+                ctx.arc(other.x, other.y, other.rayon, 0, Math.PI * 2);
+                ctx.fillStyle = other.couleur;
+                ctx.fill();
+            });
+
             // - Mettre à jour sa position (x += dx, y += dy)
             // - Gérer les rebonds : si le cercle touche un bord (x - rayon < 0 ou x + rayon > canvas.width), inverser dx (dx = -dx).
             // - Faire de même pour le rebond vertical (y, dy, canvas.height)
@@ -110,6 +119,10 @@
         canvas.addEventListener('click', function (e) {
             //cercle = {x:e.x-rect.left, y:e.y-rect.top, dx:gaussianRandom(0,5), dy:gaussianRandom(0,5),rayon:gaussianRandom(40,5), couleur:random_hex_color()};
             socket.emit('nouveau cercle', e.x-rect.left, e.y - rect.top);
+        });
+
+        socket.on('players:update', (players) => {
+            otherPlayers = players;
         });
 
         socket.on('positions',(circles) => {
