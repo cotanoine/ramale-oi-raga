@@ -188,6 +188,13 @@ setInterval(() => {
       });
     });
 
+    // Bordures de la carte
+    Object.values(players).forEach(player => {
+        player.cellules.forEach(cellule => {
+            cellule.x = Math.max(cellule.rayon, Math.min(map_width  - cellule.rayon, cellule.x));
+            cellule.y = Math.max(cellule.rayon, Math.min(map_height - cellule.rayon, cellule.y));
+        });
+    });
     // Collision entre les joueurs et les orbes
     Object.values(players).forEach(player => {
       player.cellules.forEach(cellule => {
@@ -200,6 +207,7 @@ setInterval(() => {
             });
       });
     });
+
     // Collision entre cellules du même joueur (répulsion)
     Object.values(players).forEach(player => {
       if (player.cellules.length <= 1) return;
