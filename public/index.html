@@ -41,12 +41,12 @@
         var canvas = document.getElementById('myCanvas');
         var ctx = canvas.getContext('2d');
 
-        const rect = canvas.getBoundingClientRect();
 
         let mouse = { x: 300, y: 200 };
 
         // Mise à jour de la position de la souris à chaque mouvement
         canvas.addEventListener('mousemove', e => {
+            const rect = canvas.getBoundingClientRect(); // ← recalcul à chaque fois
             mouse.x = e.clientX - rect.left;
             mouse.y = e.clientY - rect.top;
         });
@@ -126,6 +126,7 @@
 
         canvas.addEventListener('click', function (e) {
             //cercle = {x:e.x-rect.left, y:e.y-rect.top, dx:gaussianRandom(0,5), dy:gaussianRandom(0,5),rayon:gaussianRandom(40,5), couleur:random_hex_color()};
+            const rect = canvas.getBoundingClientRect();
             socket.emit('nouveau cercle', e.x-rect.left, e.y - rect.top);
         });
 

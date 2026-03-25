@@ -117,7 +117,7 @@ io.on('connection', (socket) => {
   })
 });
 
-const NB_ORBES = 100;
+const NB_ORBES = Math.floor(map_width * map_height / 10000);
 
 function creerOrbe() {
     return {
@@ -155,6 +155,7 @@ setInterval(() => {
       orbes.forEach(orbe => {
         if(distance(orbe, cercle) + orbe.rayon < cercle.rayon + 0.5*orbe.rayon){
           orbes.splice(orbes.indexOf(orbe),1);
+          orbes.push(creerOrbe());
           cercle.rayon += orbe.rayon/5;
           
         }
@@ -196,7 +197,7 @@ setInterval(() => {
               const c1 = player.cellules[i];
               const c2 = player.cellules[j];
 
-              // Ignorer si le split est trop récent 
+              // Ignorer si le split est trop récent (< 1s)
               const now = Date.now();
               if (now - c1.splitTime < 10 || now - c2.splitTime < 10) continue;
 
