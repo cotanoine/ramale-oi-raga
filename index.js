@@ -79,7 +79,6 @@ io.on('connection', (socket) => {
   socket.on('split', () => {
     const player = players[socket.id];
 
-    // On crée une nouvelle cellule pour chaque cellule assez grande
     const nouvellesCellules = [];
     player.cellules.forEach(cellule => {
 
@@ -89,7 +88,6 @@ io.on('connection', (socket) => {
         // Conserver l'aire : si on divise en 2, chaque cellule a la moitié de l'aire
         const nouveauRayon = cellule.rayon / Math.sqrt(2);
 
-        // Direction vers la souris
         const dx   = player.mouse.x - cellule.x;
         const dy   = player.mouse.y - cellule.y;
         const dist = distance(player.mouse, cellule);
@@ -111,7 +109,37 @@ io.on('connection', (socket) => {
 
     // Ajouter les nouvelles cellules au joueur
     player.cellules.push(...nouvellesCellules);
-});
+  });
+
+  socket.on('eject', () => {
+    const player = players[socket.id];
+
+    player.cellules.forEach(cellule => {
+        if (cellule.rayon < 20) return;
+
+        const dx   = player.mouse.x - cellule.x;
+        const dy   = player.mouse.y - cellule.y;
+        const dist = distance(player.mouse, cellule);
+
+        // Masse éjectée = fixe à 10
+        const rayonEjecte = 10;
+        cellule.rayon    -= rayonEjecte;
+
+        const vitesse = 15;
+        const vx = dist > 0 ? (dx / dist) * vitesse : vitesse;
+        const vy = dist > 0 ? (dy / dist) * vitesse : 0;
+
+        orbes.push(creerOrbe(
+            cellule.x + (dx / dist) * cellule.rayon,
+            cellule.y + (dy / dist) * cellule.rayon,
+            rayonEjecte,
+            player.couleur,
+            vx,
+            vy
+        ));
+    });
+  });
+
   socket.on('move left', (id) => {
 
   })
@@ -119,22 +147,36 @@ io.on('connection', (socket) => {
 
 const NB_ORBES = Math.floor(map_width * map_height / 10000);
 
-function creerOrbe() {
+function creerOrbe(x, y, rayon, couleur, dx, dy) {
     return {
-        x: Math.random() * map_width,
-        y: Math.random() * map_height,
-        rayon: 3,
-        couleur: random_hex_color()
+        x:       x       ?? Math.random() * map_width,
+        y:       y       ?? Math.random() * map_height,
+        rayon:   rayon   ?? 3,
+        couleur: couleur ?? random_hex_color(),
+        dx:      dx      ?? 0,
+        dy:      dy      ?? 0
     };
 }
 
-var orbes = Array.from({ length: NB_ORBES }, creerOrbe);
+var orbes = Array.from({ length: NB_ORBES }, () => creerOrbe());
 
 function distance (a,b){
   return Math.sqrt((a.y - b.y)**2 + (a.x - b.x)**2)
 }
 
 setInterval(() => {
+
+  orbes.forEach(orbe => {
+    if (orbe.dx || orbe.dy) {
+        orbe.x  += orbe.dx;
+        orbe.y  += orbe.dy;
+        orbe.dx *= 0.9;
+        orbe.dy *= 0.9;
+        orbe.x = Math.max(orbe.rayon, Math.min(map_width  - orbe.rayon, orbe.x));
+        orbe.y = Math.max(orbe.rayon, Math.min(map_height - orbe.rayon, orbe.y));
+    }
+  });
+
   let num_cercle = 1;
   let number_of_circles = cercles.length;
     cercles.forEach(cercle => {
@@ -152,6 +194,7 @@ setInterval(() => {
     if( cercle.y+cercle.rayon > map_height){
         cercle.dy = - Math.abs(cercle.dy)
     }
+    
       orbes.forEach(orbe => {
         if(distance(orbe, cercle) + orbe.rayon < cercle.rayon + 0.5*orbe.rayon){
           orbes.splice(orbes.indexOf(orbe),1);

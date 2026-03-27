@@ -57,6 +57,11 @@
             }
         });
 
+        document.addEventListener('keydown', e => {
+        if (e.code === 'KeyW' || e.code === 'KeyZ') {
+            socket.emit('eject');
+        }
+        });
         const player = { x: 300, y: 200, rayon: 20, couleur: '#3498db' };
         let otherPlayers = {};
         let myId = null;
