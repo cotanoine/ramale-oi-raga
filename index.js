@@ -224,9 +224,14 @@ setInterval(() => {
         const dist = distance(player.mouse, cellule);
 
         if (dist > 1) {
-            const vitesse = 3;
-            cellule.x += (dx / dist) * vitesse;
-            cellule.y += (dy / dist) * vitesse;
+          const vitesse = (3 * Math.min(dist, 100) / 100) * (30 / cellule.rayon);
+          cellule.x += (dx / dist) * vitesse;
+          cellule.y += (dy / dist) * vitesse;
+
+          // Perte de masse en se déplaçant
+          if (cellule.rayon > 20) {  
+            cellule.rayon *= 0.9998;
+          }
         }
       });
     });
