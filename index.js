@@ -52,7 +52,7 @@ io.on('connection', (socket) => {
     couleur: random_hex_color(),
     mouse:   { x: 300, y: 200 },
     cellules: [
-        { x: 300, y: 200, rayon: 20, splitTime: null }
+        { x: Math.random() * map_width, y: Math.random() * map_height, rayon: 20, splitTime: null }
     ]
   };
   socket.emit('your:id', socket.id);
@@ -256,6 +256,35 @@ setInterval(() => {
       });
     });
 
+
+    // Collision entre joueurs
+    Object.entries(players).forEach(([idA, playerA]) => {
+        Object.entries(players).forEach(([idB, playerB]) => {
+            if (idA === idB) return; // ne pas se manger soi-même
+
+            playerA.cellules.forEach(celluleA => {
+                playerB.cellules.forEach((celluleB, indexB) => {
+
+                    if (distance(celluleB, celluleA) + celluleB.rayon < celluleA.rayon + 0.5 * celluleA.rayon) {
+                        // Conservation de l'aire
+                        celluleA.rayon = Math.sqrt(celluleA.rayon ** 2 + celluleB.rayon ** 2);
+                        // Supprimer la cellule mangée
+                        playerB.cellules.splice(indexB, 1);
+                    }
+                });
+
+                // Si le joueur n'a plus de cellules, réapparition
+                if (playerB.cellules.length === 0) {
+                    playerB.cellules.push({ 
+                    x: Math.random() * map_width, 
+                    y: Math.random() * map_height, 
+                    rayon: 20, 
+                    splitTime: null 
+                    });
+                }
+            });
+        });
+    });
     // Collision entre cellules du même joueur (répulsion)
     Object.values(players).forEach(player => {
       if (player.cellules.length <= 1) return;
