@@ -3,24 +3,31 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Exercice 4 : Cercles Rebondissants</title>
-    <style>
-        body {
-            font-family: Arial;
-            padding: 20px;
-            text-align: center;
-        }
-
-        canvas {
-            border: 2px solid #333;
-            cursor: crosshair;
-            background-color: #f9f9f9;
-        }
-    </style>
+    <title>Oi.raga</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-    <canvas id="myCanvas" width="1000" height="1000"></canvas>
+    <div id="screen-home">
+        <div class="popup">
+            <h1>Oi-raga</h1>
+            <input id="pseudo-input" type="text" maxlength="16" placeholder="Ton pseudo..." autocomplete="off" />
+            <button id="play-btn">Jouer</button>
+
+            <div class="regles">
+                <h3>Règles</h3>
+                <ul>
+                    <li>Souris : déplacer ta cellule</li>
+                    <li>Mange les orbes pour grossir</li>
+                    <li>Mange les joueurs plus petits</li>
+                    <li>Espace : se diviser</li>
+                    <li>Z : éjecter de la masse</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="myCanvas"></canvas>
     <script src="/socket.io/socket.io.js"></script>
     <script>
 
@@ -62,6 +69,18 @@
             socket.emit('eject');
         }
         });
+
+        document.getElementById('play-btn').addEventListener('click', () => {
+            const pseudo = document.getElementById('pseudo-input').value.trim() || 'Anonyme';
+            document.getElementById('screen-home').style.display = 'none';
+            document.getElementById('myCanvas').style.display = 'block';
+            socket.emit('player:join', { pseudo });
+        });
+
+        document.getElementById('pseudo-input').addEventListener('keydown', e => {
+            if (e.key === 'Enter') document.getElementById('play-btn').click();
+        });
+
         const player = { x: 300, y: 200, rayon: 20, couleur: '#3498db' };
         let otherPlayers = {};
         let myId = null;
@@ -79,7 +98,13 @@
         var cercles = [{x:50, y:50, dx:1, dy:2, rayon:10, couleur:random_hex_color()}];
 
         // Fonction d'animation principale
-        function animate() {    
+        function animate() {  
+            function resize() {
+                canvas.width  = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();  
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             // Récupérer les cellules du joueur local
@@ -123,10 +148,17 @@
             // Dessin des joueurs
             Object.entries(otherPlayers).forEach(([id, other]) => {
                 other.cellules.forEach(cellule => {
-                        ctx.beginPath();
+                    ctx.beginPath();
                     ctx.arc(cellule.x, cellule.y, cellule.rayon, 0, Math.PI * 2);
                     ctx.fillStyle = other.couleur;
                     ctx.fill();
+
+                    const fontSize = Math.max(10, Math.min(cellule.rayon * 0.45, 22));
+                    ctx.font         = `bold ${fontSize}px Arial`;
+                    ctx.fillStyle    = '#fff';
+                    ctx.textAlign    = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(other.pseudo || 'Anonyme', cellule.x, cellule.y);
                 });
             });
 
@@ -159,6 +191,9 @@
         socket.on('positions',(circles) => {
             cercles = circles;
         })
+        socket.on('dead', () => {
+            document.getElementById('screen-home').style.display = 'flex';
+        });
 
         // TODO 2: Ajouter un écouteur 'click' sur le canvas.
         // A chaque clic :

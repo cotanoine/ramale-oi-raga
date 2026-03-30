@@ -13,6 +13,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 console.log(__dirname);
 const players = {};
 
+app.use(express.static(join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
   res.sendFile(join(__dirname, 'public/index.html'));
@@ -48,17 +49,21 @@ function random_hex_color() {
 
 io.on('connection', (socket) => {
 
- players[socket.id] = {
-    couleur: random_hex_color(),
-    mouse:   { x: 300, y: 200 },
-    cellules: [
-        { x: Math.random() * map_width, y: Math.random() * map_height, rayon: 20, splitTime: null }
-    ]
-  };
   socket.emit('your:id', socket.id);
 
   let id = randomUUID();
   console.log('a user connected');
+
+  socket.on('player:join', (data) => {
+    players[socket.id] = {
+        pseudo:  data.pseudo,
+        couleur: random_hex_color(),
+        mouse:   { x: 300, y: 200 },
+        cellules: [
+            { x: Math.random() * map_width, y: Math.random() * map_height, rayon: 20, splitTime: null }
+        ]
+    };
+  });
 
   socket.on('disconnect', () => {
     delete players[socket.id];
@@ -73,10 +78,12 @@ io.on('connection', (socket) => {
   });
 
   socket.on('player:move', (data) => {
+    if (!players[socket.id]) return;
     players[socket.id].mouse = { x: data.x, y: data.y };
 });
 
   socket.on('split', () => {
+    if (!players[socket.id]) return;
     const player = players[socket.id];
 
     const nouvellesCellules = [];
@@ -112,6 +119,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('eject', () => {
+    if (!players[socket.id]) return;
     const player = players[socket.id];
 
     player.cellules.forEach(cellule => {
@@ -275,13 +283,9 @@ setInterval(() => {
 
                 // Si le joueur n'a plus de cellules, réapparition
                 if (playerB.cellules.length === 0) {
-                    playerB.cellules.push({ 
-                    x: Math.random() * map_width, 
-                    y: Math.random() * map_height, 
-                    rayon: 20, 
-                    splitTime: null 
-                    });
-                }
+                  io.to(idB).emit('dead');
+                  delete players[idB];
+                }             
             });
         });
     });
