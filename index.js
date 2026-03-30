@@ -349,17 +349,27 @@ setInterval(() => {
     io.emit('positions', cercles);
     io.emit('orbes', orbes);
     const sortedPlayers = Object.entries(players)
-                                .sort(([, a], [, b]) => {
+      .sort(([, a], [, b]) => {
         const maxA = Math.max(...a.cellules.map(c => c.rayon));
         const maxB = Math.max(...b.cellules.map(c => c.rayon));
         return maxA - maxB;
       })
-        .reduce((obj, [id, player]) => {
-          obj[id] = player;
-          return obj;
-        }, {});
-    io.emit('players:update', sortedPlayers);
+      .reduce((obj, [id, player]) => {
+        obj[id] = player;
+        return obj;
+      }, {});
 
+    // Calcul du leaderboard ← ici
+    const leaderboard = Object.values(players)
+      .map(player => ({
+        pseudo: player.pseudo,
+        rayon: Math.max(...player.cellules.map(c => c.rayon))
+      }))
+      .sort((a, b) => b.rayon - a.rayon)
+      .slice(0, 10);
+
+    io.emit('leaderboard', leaderboard);
+    io.emit('players:update', sortedPlayers);
     }, 25);
 
 server.listen(3000, () => {

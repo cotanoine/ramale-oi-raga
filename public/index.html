@@ -94,6 +94,10 @@
             orbes = data;
         });
 
+        let leaderboard = [];
+        socket.on('leaderboard', (data) => {
+            leaderboard = data;
+        });
         // Tableau pour stocker tous les cercles
         var cercles = [{x:50, y:50, dx:1, dy:2, rayon:10, couleur:random_hex_color()}];
 
@@ -163,7 +167,27 @@
             });
 
             ctx.restore();
+            ctx.save();
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            ctx.fillRect(canvas.width - 200, 10, 190, 30 + leaderboard.length * 25);
 
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillText('Classement', canvas.width - 190, 18);
+
+            leaderboard.forEach((entry, i) => {
+                ctx.font = '13px Arial';
+                ctx.fillStyle = i === 0 ? '#f1c40f' : '#fff';
+                ctx.fillText(
+                    `${i + 1}. ${entry.pseudo} (${Math.round(entry.rayon)})`,
+                    canvas.width - 190,
+                    45 + i * 25
+                );
+            });
+            ctx.restore();
+            
             // Envoi de la position de la souris au serveur (on convertit d'abord la position de la souris)
             const mondeX = (mouse.x - canvas.width  / 2) / zoom + cx;
             const mondeY = (mouse.y - canvas.height / 2) / zoom + cy;
