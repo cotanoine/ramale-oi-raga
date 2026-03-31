@@ -201,13 +201,6 @@
         // Lancer l'animation
         animate();
 
-
-        canvas.addEventListener('click', function (e) {
-            //cercle = {x:e.x-rect.left, y:e.y-rect.top, dx:gaussianRandom(0,5), dy:gaussianRandom(0,5),rayon:gaussianRandom(40,5), couleur:random_hex_color()};
-            const rect = canvas.getBoundingClientRect();
-            socket.emit('nouveau cercle', e.x-rect.left, e.y - rect.top);
-        });
-
         socket.on('players:update', (players) => {
             otherPlayers = players;
         });

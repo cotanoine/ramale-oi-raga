@@ -273,7 +273,7 @@ setInterval(() => {
             playerA.cellules.forEach(celluleA => {
                 playerB.cellules.forEach((celluleB, indexB) => {
 
-                    if (distance(celluleB, celluleA) + celluleB.rayon < celluleA.rayon + 0.5 * celluleA.rayon) {
+                    if (distance(celluleB, celluleA) + celluleB.rayon < celluleA.rayon + 0.8 * celluleA.rayon) {
                         // Conservation de l'aire
                         celluleA.rayon = Math.sqrt(celluleA.rayon ** 2 + celluleB.rayon ** 2);
                         // Supprimer la cellule mangée
@@ -361,12 +361,10 @@ setInterval(() => {
 
     // Calcul du leaderboard ← ici
     const leaderboard = Object.values(players)
-      .map(player => ({
+    .map(player => ({
         pseudo: player.pseudo,
-        rayon: Math.max(...player.cellules.map(c => c.rayon))
-      }))
-      .sort((a, b) => b.rayon - a.rayon)
-      .slice(0, 10);
+        rayon:  Math.sqrt(player.cellules.reduce((sum, c) => sum + c.rayon ** 2, 0))
+    }))
 
     io.emit('leaderboard', leaderboard);
     io.emit('players:update', sortedPlayers);
