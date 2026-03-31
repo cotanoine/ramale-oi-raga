@@ -214,7 +214,7 @@ setInterval(() => {
 
             playerA.cellules.forEach(celluleA => {
                 playerB.cellules.forEach((celluleB, indexB) => {
-                    if (distance(celluleB, celluleA) + celluleB.rayon < celluleA.rayon + 0.8 * celluleA.rayon) {
+                    if (distance(celluleB, celluleA) + celluleB.rayon < celluleA.rayon + 0.7 * celluleB.rayon) {
                         celluleA.rayon = Math.sqrt(celluleA.rayon ** 2 + celluleB.rayon ** 2);
                         playerB.cellules.splice(indexB, 1);
                     }
@@ -228,7 +228,6 @@ setInterval(() => {
         });
     });
 
-    // Define time only once per game tick
     const now = Date.now();
     // Collision entre cellules du même joueur (répulsion)
     Object.values(players).forEach(player => {
