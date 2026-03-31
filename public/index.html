@@ -98,8 +98,6 @@
         socket.on('leaderboard', (data) => {
             leaderboard = data;
         });
-        // Tableau pour stocker tous les cercles
-        var cercles = [{x:50, y:50, dx:1, dy:2, rayon:10, couleur:random_hex_color()}];
 
         // Fonction d'animation principale
         function animate() {  
@@ -131,15 +129,6 @@
             ctx.translate(canvas.width / 2, canvas.height / 2);
             ctx.scale(zoom, zoom);
             ctx.translate(-cx, -cy);
-
-            // Dessin des cercles rebondissants
-            cercles.forEach(cercle => {
-                ctx.beginPath();
-                ctx.arc(cercle.x, cercle.y, cercle.rayon, 0, Math.PI * 2);
-                ctx.fillStyle = cercle.couleur;
-                ctx.fill();
-                ctx.fillText(cercle.owner, cercle.x - 2*cercle.rayon, cercle.y - cercle.rayon);
-            });
 
             // Dessin des orbes
             orbes.forEach(orbe => {
@@ -205,19 +194,9 @@
             otherPlayers = players;
         });
 
-        socket.on('positions',(circles) => {
-            cercles = circles;
-        })
         socket.on('dead', () => {
             document.getElementById('screen-home').style.display = 'flex';
         });
-
-        // TODO 2: Ajouter un écouteur 'click' sur le canvas.
-        // A chaque clic :
-        // - Obtenir les coordonnées X et Y de la souris par rapport au canvas (e.clientX - rect.left).
-        // - Créer un nouvel objet cercle : { x: X, y: Y, dx: vitesse_x, dy: vitesse_y, rayon: 20, couleur: '#...' }
-        // - (Astuce pour des vitesses aléatoires : (Math.random() - 0.5) * 10)
-        // - Ajouter cet objet au tableau `cercles`.
 
     </script>
 

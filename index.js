@@ -23,8 +23,6 @@ app.get('/', (req, res) => {
 const map_width  = 5000;
 const map_height = 5000;
 
-var cercles = [];
-
 // ── Utilitaires ──
 function gaussianRandom(mean=0, stdev=1) {
     const u = 1 - Math.random();
@@ -66,7 +64,7 @@ io.on('connection', (socket) => {
 
     socket.emit('your:id', socket.id);
     let id = randomUUID();
-    console.log('a user connected');
+    console.log(String(id) + ' user connected');
 
     // Création du joueur quand il entre son pseudo
     socket.on('player:join', (data) => {
@@ -83,14 +81,6 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         delete players[socket.id];
         console.log('user disconnected');
-    });
-
-    // Création d'un cercle rebondissant au clic
-    socket.on('nouveau cercle', (x, y) => {
-        console.log('Nouveau cercle: ' + x + ", " + y);
-        let cercle = { x, y, dx: gaussianRandom(0, 5), dy: gaussianRandom(0, 5), rayon: gaussianRandom(40, 5), couleur: random_hex_color(), owner: id };
-        cercles.push(cercle);
-        cercles.sort((a, b) => a.rayon - b.rayon);
     });
 
     // Réception de la position de la souris
@@ -175,37 +165,6 @@ setInterval(() => {
             orbe.x = Math.max(orbe.rayon, Math.min(map_width  - orbe.rayon, orbe.x));
             orbe.y = Math.max(orbe.rayon, Math.min(map_height - orbe.rayon, orbe.y));
         }
-    });
-
-    // Mise à jour des cercles rebondissants
-    let num_cercle        = 1;
-    let number_of_circles = cercles.length;
-    cercles.forEach(cercle => {
-        cercle.x += cercle.dx;
-        cercle.y += cercle.dy;
-        if (cercle.x - cercle.rayon < 0)              cercle.dx =  Math.abs(cercle.dx);
-        if (cercle.x + cercle.rayon > map_width)       cercle.dx = -Math.abs(cercle.dx);
-        if (cercle.y - cercle.rayon < 0)              cercle.dy =  Math.abs(cercle.dy);
-        if (cercle.y + cercle.rayon > map_height)      cercle.dy = -Math.abs(cercle.dy);
-
-        orbes.forEach(orbe => {
-            if (distance(orbe, cercle) + orbe.rayon < cercle.rayon + 0.5 * orbe.rayon) {
-                orbes.splice(orbes.indexOf(orbe), 1);
-                orbes.push(creerOrbe());
-                cercle.rayon += orbe.rayon / 5;
-            }
-        });
-
-        for (let i = num_cercle; i < number_of_circles; i++) {
-            let autre_cercle = cercles[i];
-            if (distance(cercle, autre_cercle) + cercle.rayon < autre_cercle.rayon + 0.5 * cercle.rayon) {
-                cercles.splice(num_cercle - 1, 1);
-                autre_cercle.rayon += cercle.rayon / 20;
-                number_of_circles -= 1;
-                break;
-            }
-        }
-        num_cercle += 1;
     });
 
     // Mise à jour de la position de chaque joueur vers sa souris
@@ -326,7 +285,6 @@ setInterval(() => {
     });
 
     // Envoi des positions à tous les clients
-    io.emit('positions', cercles);
     io.emit('orbes', orbes);
 
     // Tri des joueurs par rayon avant envoi
