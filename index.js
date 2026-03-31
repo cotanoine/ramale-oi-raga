@@ -96,6 +96,7 @@ io.on('connection', (socket) => {
 
         const nouvellesCellules = [];
         player.cellules.forEach(cellule => {
+            cellule.was_last_split = false;
             if (cellule.rayon < 20) return;
 
             const nouveauRayon = cellule.rayon / Math.sqrt(2);
@@ -108,13 +109,15 @@ io.on('connection', (socket) => {
             const ny = dist > 0 ? cellule.y + (dy / dist) * eject : cellule.y;
 
             cellule.rayon     = nouveauRayon;
-            cellule.splitTime = Date.now();
+            let splitTime = Date.now();
+            cellule.splitTime = splitTime;
 
             nouvellesCellules.push({
                 x:         nx,
                 y:         ny,
                 rayon:     nouveauRayon,
-                splitTime: Date.now()
+                splitTime: splitTime,
+                was_last_split : true
             });
         });
 
@@ -175,14 +178,10 @@ setInterval(() => {
             const dist = distance(player.mouse, cellule);
 
             if (dist > 1) {
-                const vitesse = (3 * Math.min(dist, 100) / 100) * (30 / cellule.rayon);
+                let separation_speed = cellule.was_last_split ? 10*2**((cellule.splitTime - Date.now())/200) : 0
+                const vitesse = 1 + (3 * Math.min(dist, 100) / 100) * (30 / cellule.rayon) + separation_speed;
                 cellule.x += (dx / dist) * vitesse;
                 cellule.y += (dy / dist) * vitesse;
-
-                // Perte de masse en se déplaçant
-                if (cellule.rayon > 20) {
-                    cellule.rayon *= 0.9998;
-                }
             }
         });
     });
@@ -229,6 +228,8 @@ setInterval(() => {
         });
     });
 
+    // Define time only once per game tick
+    const now = Date.now();
     // Collision entre cellules du même joueur (répulsion)
     Object.values(players).forEach(player => {
         if (player.cellules.length <= 1) return;
@@ -237,7 +238,7 @@ setInterval(() => {
             for (let j = i + 1; j < player.cellules.length; j++) {
                 const c1  = player.cellules[i];
                 const c2  = player.cellules[j];
-                const now = Date.now();
+                
 
                 if (now - c1.splitTime < 50 || now - c2.splitTime < 50) continue;
 
@@ -262,7 +263,6 @@ setInterval(() => {
     Object.values(players).forEach(player => {
         if (player.cellules.length <= 1) return;
 
-        const now        = Date.now();
         const aFusionner = player.cellules.filter(c =>
             c.splitTime !== null && now - c.splitTime > 10000
         );
