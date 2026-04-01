@@ -68,7 +68,7 @@ io.on('connection', (socket) => {
             mouse:   { x: 300, y: 200 },
             cellules: [
                 { x: Math.random() * map_width, y: Math.random() * map_height, rayon: 20, splitTime: null }
-            ]
+            ],
         };
     });
 

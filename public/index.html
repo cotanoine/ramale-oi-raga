@@ -32,17 +32,6 @@
     <script>
 
 
-        // Replace with your own id
-        const id = 'Hop';
-        let letters = "0123456789ABCDEF";
-            function random_hex_color() {
-            let color = '#';
-            for (let i = 0; i < 6; i++)
-                color += letters[(Math.floor(Math.random() * 16))];
-            return color;
-        }
-
-
         const socket = io();
 
         var canvas = document.getElementById('myCanvas');
@@ -80,8 +69,7 @@
         document.getElementById('pseudo-input').addEventListener('keydown', e => {
             if (e.key === 'Enter') document.getElementById('play-btn').click();
         });
-
-        const player = { x: 300, y: 200, rayon: 20, couleur: '#3498db' };
+        
         let otherPlayers = {};
         let myId = null;
 
@@ -138,6 +126,64 @@
                 ctx.fill();
             });
 
+
+            // Fontion générée par IA
+            function drawFish(x, y, width, height, color) {
+                ctx.fillStyle = color;
+
+                // 1. Draw the Body (Top and Bottom Arches)
+                ctx.beginPath();
+                // Start at the nose
+                ctx.moveTo(x, y); 
+                // Top arch (control point is above the center)
+                ctx.quadraticCurveTo(x + width / 2, y - height, x + width, y);
+                // Bottom arch (control point is below the center)
+                ctx.quadraticCurveTo(x + width / 2, y + height, x, y);
+                ctx.fill();
+
+                // 2. Draw the Tail
+                ctx.beginPath();
+                ctx.moveTo(x + width, y); // Start at the back of the body
+                ctx.lineTo(x + width + width / 3, y - height / 2); // Top fin
+                ctx.lineTo(x + width + width / 3, y + height / 2); // Bottom fin
+                ctx.closePath();
+                ctx.fill();
+
+                // 3. Draw the Eye
+                ctx.beginPath();
+                ctx.arc(x + width / 4, y - height / 4, height / 10, 0, Math.PI * 2);
+                ctx.fillStyle = "white";
+                ctx.fill();
+                ctx.fillStyle = "black";
+                ctx.beginPath();
+                ctx.arc(x + width / 4, y - height / 4, height / 20, 0, Math.PI * 2);
+                ctx.fill();
+}
+
+
+            function drawGrid(step) {
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(100, 100, 100, 0.35)'; 
+                ctx.lineWidth = 1;
+
+                const map_width  = 5000;
+                const map_height = 5000;
+
+                for (let x = 0; x <= map_width; x += step) {
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, map_height);
+                }
+
+                for (let y = 0; y <= map_height+1; y += step) {
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(map_width, y);
+                }
+
+                ctx.stroke();
+            }
+
+            drawGrid(25)
+
             // Dessin des joueurs
             Object.entries(otherPlayers).forEach(([id, other]) => {
                 other.cellules.forEach(cellule => {
@@ -148,10 +194,12 @@
 
                     const fontSize = Math.max(10, Math.min(cellule.rayon * 0.45, 22));
                     ctx.font         = `bold ${fontSize}px Arial`;
-                    ctx.fillStyle    = '#fff';
+                    ctx.fillStyle    = '#000000';
                     ctx.textAlign    = 'center';
                     ctx.textBaseline = 'middle';
+                    if(id == myId) drawFish(cellule.x - cellule.rayon,cellule.y, 2*cellule.rayon, cellule.rayon, '#ff0000');
                     ctx.fillText(other.pseudo || 'Anonyme', cellule.x, cellule.y);
+                    
                 });
             });
 
