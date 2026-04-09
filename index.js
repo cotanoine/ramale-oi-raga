@@ -53,6 +53,7 @@ function creerOrbe(x, y, rayon, couleur, dx, dy) {
 
 var orbes = Array.from({ length: NB_ORBES }, () => creerOrbe());
 
+
 // ── Socket.io ──
 io.on('connection', (socket) => {
 
