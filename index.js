@@ -19,11 +19,11 @@ app.get('/', (req, res) => {
   res.sendFile(join(__dirname, 'public/index.html'));
 });
 
-// ── Constantes de la carte ──
+// Constantes de la carte
 const map_width  = 5000;
 const map_height = 5000;
 
-// ── Utilitaires ──
+// Utilitaires
 
 let letters = "0123456789ABCDEF";
 function random_hex_color() {
@@ -37,7 +37,7 @@ function distance(a, b) {
     return Math.sqrt((a.y - b.y) ** 2 + (a.x - b.x) ** 2);
 }
 
-// ── Génération des orbes ──
+// Génération des orbes 
 const NB_ORBES = Math.floor(map_width * map_height / 10000);
 
 function creerOrbe(x, y, rayon, couleur, dx, dy) {
@@ -54,7 +54,7 @@ function creerOrbe(x, y, rayon, couleur, dx, dy) {
 var orbes = Array.from({ length: NB_ORBES }, () => creerOrbe());
 
 
-// ── Socket.io ──
+// Socket.io 
 io.on('connection', (socket) => {
 
     socket.emit('your:id', socket.id);
@@ -150,7 +150,7 @@ io.on('connection', (socket) => {
     });
 });
 
-// ── Boucle de jeu (25ms = ~40 fois/sec) ──
+// Boucle de jeu (25ms = ~40 fois/sec) 
 setInterval(() => {
 
     // Déplacement des orbes éjectées
@@ -224,6 +224,7 @@ setInterval(() => {
     });
 
     const now = Date.now();
+
     // Collision entre cellules du même joueur (répulsion)
     Object.values(players).forEach(player => {
         if (player.cellules.length <= 1) return;
